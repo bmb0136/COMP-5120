@@ -49,7 +49,6 @@
               sysvsem
               sysvshm
               tokenizer
-              xml
               xmlreader
               xmlwriter
               xsl
@@ -58,6 +57,31 @@
             ]);
         };
         mysql = pkgs.mysql84;
+        seed-data = pkgs.runCommand "seed-data" {
+          nativeBuildInputs = [pkgs.python3];
+        } ''
+          cp ${./data}/* .
+          mkdir -p $out
+          cat <<EOF > pre.sql
+
+          CREATE USER 'bmb0136'@'%' IDENTIFIED BY 'secret';
+          GRANT ALL PRIVILEGES ON bmb0136db.* TO 'bmb0136'@'%' WITH GRANT OPTION;
+          FLUSH PRIVILEGES;
+
+
+          START TRANSACTION;
+          CREATE DATABASE bmb0136db;
+          USE bmb0136db;
+          EOF
+
+          python3 converter.py Book.csv Customer.csv Employee.csv Order.csv -w Order_Detail.csv Shipper.csv Subject.csv Supplier.csv > data.sql
+
+          cat <<EOF > post.sql
+          COMMIT;
+          EOF
+
+          cat pre.sql data.sql post.sql > $out/data.sql
+        '';
       in {
         packages.default = pkgs.writeShellApplication {
           name = "db-project";
@@ -65,20 +89,18 @@
           text = ''
             TMP=$(mktemp -d)
 
+            mkdir "$TMP/db"
+            mkdir "$TMP/db_tmp"
+            cd "$TMP"
+            mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --initialize --port 3307 --init-file ${seed-data}/data.sql
+            mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --port 3307 &
+            DB=$!
+
             mkdir "$TMP/www"
             cp -r ${./src}/* "$TMP/www/"
             cd "$TMP/www"
             php -S localhost:8080 &
             WS=$!
-
-            mkdir "$TMP/db"
-            mkdir "$TMP/db_tmp"
-            cd "$TMP"
-            export MYSQL_USER=bmb0136
-            export MYSQL_PASSWORD=secret
-            mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --initialize-insecure --port 3307
-            mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --port 3307 &
-            DB=$!
 
             read -r
             kill -9 $WS $DB
