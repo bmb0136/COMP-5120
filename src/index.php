@@ -5,6 +5,19 @@ $query = "";
 if (isset($_POST["query"]) && trim(strlen($_POST["query"])) > 0) {
   $query = $_POST["query"];
 
+  $is_insert = str_contains(strtolower($query), "insert into");
+  $is_delete = str_contains(strtolower($query), "delete from");
+  $is_update = str_contains(strtolower($query), "update");
+
+  $verb = "queried";
+  if ($is_insert) {
+    $verb = "inserted";
+  } else if ($is_delete) {
+    $verb = "deleted";
+  } else if ($is_update) {
+    $verb = "updated";
+  }
+
   if (str_contains(strtolower($query), "drop")) {
     $sql_error = "DROP statements not allowed";
   } else {
@@ -12,7 +25,7 @@ if (isset($_POST["query"]) && trim(strlen($_POST["query"])) > 0) {
     $mysqli = new mysqli("localhost:3307", "bmb0136", "secret", "bmb0136db");
     try {
       $result = $mysqli->query($query);
-      $rows = $result === true ? 0 : $result->num_rows;
+      $rows = $mysqli->affected_rows;
     } catch (mysqli_sql_exception $e) {
       $sql_error = $e->getMessage();
     }
@@ -55,8 +68,9 @@ if (isset($_POST["query"]) && trim(strlen($_POST["query"])) > 0) {
           </div>
         </form>
       </div>
-      <?php if (isset($result) && $rows > 0): ?>
-      <div id="output" class="container box">
+      <?php if (isset($result) && !is_bool($result)): ?>
+      <div id="output" class="container box mt-6 table-container">
+        <p><?php echo $rows; ?> row(s) queried</p>
         <table class="table is-fullwidth is-striped">
           <thead>
             <tr>
@@ -79,6 +93,14 @@ if (isset($_POST["query"]) && trim(strlen($_POST["query"])) > 0) {
             ?>
           </tbody>
         </table>
+      </div>
+      <?php elseif (strlen($query) > 0): ?>
+      <div id="output" class="container box">
+        <p><?php echo $rows . " row(s) " . $verb; ?></p>
+      </div>
+      <?php else: ?>
+      <div id="output" class="container box">
+        <p>Run a query to see the results</p>
       </div>
       <?php endif; ?>
     </section>
