@@ -92,7 +92,7 @@
             mkdir "$TMP/db"
             mkdir "$TMP/db_tmp"
             cd "$TMP"
-            mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --initialize --port 3307 --init-file ${seed-data}/data.sql
+            mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --initialize --init-file ${seed-data}/data.sql
             mysqld -h "$TMP/db" -t "$TMP/db_tmp" --socket "$TMP/db.sock" --port 3307 &
             DB=$!
 
