@@ -28,6 +28,7 @@ if (isset($_POST["query"]) && trim(strlen($_POST["query"])) > 0) {
       $rows = $mysqli->affected_rows;
     } catch (mysqli_sql_exception $e) {
       $sql_error = $e->getMessage();
+      $rows = 0;
     }
 
     $mysqli->close();
@@ -40,11 +41,14 @@ if (isset($_POST["query"]) && trim(strlen($_POST["query"])) > 0) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>COMP 5120 Project</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+    <link rel="stylesheet" href="bulma.min.css">
   </head>
   <body>
     <section class="section">
       <div class="container box">
+        <div class="has-text-centered">
+          <p class="title">Brandon's Bookstore</p>
+        </div>
         <form method="post" id="mainForm">
           <div class="field">
             <label class="label">Query</label>
