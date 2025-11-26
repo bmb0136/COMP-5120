@@ -1,34 +1,226 @@
-1. Show the subject names of books supplied by *supplier2*.
-2. Show the name and price of the most expensive book supplied by
-     *supplier3*.
-3. Show the unique names of all books ordered by *lastname1
-     firstname1*.
-4. Show the title of books which have more than 10 units in stock.
-5. Show the total price *lastname1 firstname1* has paid for the books.
-6. Show the names of the customers who have paid less than $80 in
-     totals.
-7. Show the name of books supplied by *supplier2*.
-8. Show the total price each customer paid and their names.  List the
-     result in descending price.
-9. Show the names of all the books shipped on 08/04/2016 and their
-     shippers' names.
-10. Show the unique names of all the books *lastname1 firstname1* and
-     *lastname4 firstname4* *both* ordered.
-11. Show the names of all the books *lastname6 firstname6* was
-     responsible for.
-12. Show the names of all the ordered books and their total
-     quantities.  List the result in ascending quantity.
-13. Show the names of the customers who ordered at least 2 books.
-14. Show the name of the customers who have ordered at least a book in
-     *category3* or *category4* and the book names.
-15. Show the name of the customer who has ordered at least one book
-     written by *author1*.
-16. Show the name and total sale (price of orders) of each employee.
-17. Show the book names and their respective quantities for open
-     orders (the orders which have not been shipped) at midnight
-     08/04/2016.
-18. Show the names of customers who have ordered more than 1 book and
-     the corresponding quantities.  List the result in the descending
-     quantity.
-19. Show the names of customers who have ordered more than 3 books and
-     their respective telephone numbers.
+# 1. Show the subject names of books supplied by *supplier2*.
+
+Query:
+```
+SELECT S.CategoryName
+FROM Books B
+INNER JOIN Subjects S ON S.SubjectID = B.SubjectID
+WHERE B.SupplierID = (
+  SELECT SupplierID
+  FROM Suppliers
+  WHERE CompanyName = "supplier2")
+
+```
+
+Result:
+```
+| CategoryName |
+|--------------|
+| category1    |
+| category2    |
+```
+
+# 2. Show the name and price of the most expensive book supplied by *supplier3*.
+
+Query:
+```
+SELECT Title, UnitPrice 
+FROM Books
+WHERE SupplierID = (
+  SELECT SupplierID
+  FROM Suppliers
+  WHERE CompanyName = "supplier3")
+ORDER BY UnitPrice DESC
+LIMIT 1
+```
+Result:
+```
+| Title | UnitPrice |
+|-------|-----------|
+| book7 | 56.9      |
+```
+
+
+# 3. Show the unique names of all books ordered by *lastname1 firstname1*.
+
+Query:
+```
+SELECT DISTINCT B.Title
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O On O.OrderID = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+WHERE C.LastName = "lastname1" AND C.FirstName = "firstname1"
+```
+
+Result:
+```
+| Title |
+|-------|
+| book1 |
+| book4 |
+| book6 |
+| book7 |
+```
+
+# 4. Show the title of books which have more than 10 units in stock.
+
+Query:
+```
+SELECT Title
+FROM Books
+WHERE Quantity > 10
+```
+
+Result:
+```
+| Title |
+|-------|
+| book4 |
+| book6 |
+| book7 |
+```
+
+# 5. Show the total price *lastname1 firstname1* has paid for the books.
+
+Query:
+```
+SELECT SUM(B.UnitPrice * OD.Quantity) AS Total
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+WHERE C.LastName = "lastname1" AND C.FirstName = "firstname1"
+```
+
+Result:
+```
+| Total             |
+|-------------------|
+| 266.9600067138672 |
+```
+> Note: ignore the decimals beyond two places, they are wrong due to floating point errors
+
+# 6. Show the names of the customers who have paid less than $80 in totals.
+
+Query:
+```
+SELECT C.LastName, C.FirstName
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID
+HAVING  SUM(B.UnitPrice * OD.Quantity) < 80
+```
+
+Result:
+```
+| LastName  | FirstName  |
+|-----------|------------|
+| lastname2 | firstname2 |
+| lastname3 | firstname3 |
+```
+
+
+# 7. Show the name of books supplied by *supplier2*.
+
+Query:
+```
+SELECT Title
+FROM Books
+WHERE SupplierID = (
+  SELECT SupplierID
+  FROM Suppliers
+  WHERE CompanyName = "supplier2")
+```
+
+Result:
+```
+| Title |
+|-------|
+| book3 |
+| book5 |
+```
+
+# 8. Show the total price each customer paid and their names.  List the result in descending price.
+
+Query:
+```
+SELECT *
+FROM (
+  SELECT C.LastName, C.FirstName, SUM(B.UnitPrice * OD.Quantity) AS Total
+  FROM Order_Details OD
+  INNER JOIN Books B ON B.BookID = OD.BookID
+  INNER JOIN Orders O on O.OrderId = OD.OrderID
+  INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+  GROUP BY C.CustomerID) Temp
+ORDER BY Temp.Total DESC
+```
+
+Result:
+```
+| LastName  | FirstName  | Total              |
+|-----------|------------|--------------------|
+| lastname4 | firstname4 | 296.38000869750977 |
+| lastname1 | firstname1 | 266.9600067138672  |
+| lastname2 | firstname2 | 78.9000015258789   |
+| lastname3 | firstname3 | 12.34000015258789  |
+```
+> Note: ignore the decimals beyond two places, they are wrong due to floating point errors
+
+# 9. Show the names of all the books shipped on 08/04/2016 and their shippers' names.
+
+Query:
+```
+SELECT B.Title, S.ShpperName
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Shippers S on S.ShipperID = O.ShipperID
+WHERE O.ShippedDate = "8/4/2016"
+```
+
+Result:
+```
+| Title | ShpprName |
+|-------|-----------|
+| book5 | shipper2  |
+| book3 | shipper1  |
+| book4 | shipper1  |
+| book7 | shipper1  |
+| book1 | shipper1  |
+```
+
+# 10. Show the unique names of all the books *lastname1 firstname1* and *lastname4 firstname4* *both* ordered.
+
+Query:
+```
+SELECT DISTINCT B.Title
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C on C.CustomerID = O.CustomerId
+WHERE (C.LastName = "lastname1" and C.FirstName = "firstname1") OR (C.LastName = "lastname4" and C.FirstName = "firstname4")
+```
+
+Result:
+```
+| Title |
+|-------|
+| book1 |
+| book4 |
+| book6 |
+| book7 |
+| book3 |
+```
+
+# 11. Show the names of all the books *lastname6 firstname6* was responsible for.
+# 12. Show the names of all the ordered books and their total quantities.  List the result in ascending quantity.
+# 13. Show the names of the customers who ordered at least 2 books.
+# 14. Show the name of the customers who have ordered at least a book in *category3* or *category4* and the book names.
+# 15. Show the name of the customer who has ordered at least one book written by *author1*.
+# 16. Show the name and total sale (price of orders) of each employee.
+# 17. Show the book names and their respective quantities for open orders (the orders which have not been shipped) at midnight 08/04/2016.
+# 18. Show the names of customers who have ordered more than 1 book and the corresponding quantities.  List the result in the descending quantity.
+# 19. Show the names of customers who have ordered more than 3 books and their respective telephone numbers.
