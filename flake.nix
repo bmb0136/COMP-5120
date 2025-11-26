@@ -99,7 +99,7 @@
             mkdir "$TMP/www"
             cp -r ${./src}/* "$TMP/www/"
             cd "$TMP/www"
-            php -S localhost:8080 &
+            php -S 0.0.0.0:8080 &
             WS=$!
 
             read -r
@@ -110,6 +110,17 @@
         };
         devShells.default = pkgs.mkShell {
           packages = [php mysql];
+        };
+        packages.submission = pkgs.stdenv.mkDerivation {
+          name = "submission";
+          src = ./.;
+          nativeBuildInputs = [pkgs.zip];
+          buildPhase = ''
+            mkdir -p $out
+            echo "https://webhome.auburn.edu/~bmb0136/" > url.txt
+            cp data/query.txt sql.txt
+            zip -r $out/submission.zip url.txt sql.txt src/
+          '';
         };
       };
     };
