@@ -196,10 +196,14 @@ Query:
 ```
 SELECT DISTINCT B.Title
 FROM Order_Details OD
+INNER JOIN Orders O ON O.OrderID = OD.OrderID
 INNER JOIN Books B ON B.BookID = OD.BookID
-INNER JOIN Orders O on O.OrderId = OD.OrderID
-INNER JOIN Customers C on C.CustomerID = O.CustomerId
-WHERE (C.LastName = "lastname1" and C.FirstName = "firstname1") OR (C.LastName = "lastname4" and C.FirstName = "firstname4")
+WHERE O.CustomerID IN (
+  SELECT CustomerID
+  FROM Customers
+  WHERE (LastName = "lastname1" and FirstName = "firstname1") OR (LastName = "lastname4" and FirstName = "firstname4"))
+GROUP BY B.BookID
+HAVING COUNT(DISTINCT O.CustomerID) = 2
 ```
 
 Result:
