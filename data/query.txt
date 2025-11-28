@@ -212,9 +212,7 @@ Result:
 |-------|
 | book1 |
 | book4 |
-| book6 |
 | book7 |
-| book3 |
 ```
 
 # 11. Show the names of all the books *lastname6 firstname6* was responsible for.
@@ -354,6 +352,7 @@ Result:
 | lastname6 | firstname9 | 654.5800170898438 |
 | lastname5 | firstname5 | 654.5800170898438 |
 ```
+> Note: ignore the decimals beyond two places, they are wrong due to floating point errors
 
 # 17. Show the book names and their respective quantities for open orders (the orders which have not been shipped) at midnight 08/04/2016.
 
