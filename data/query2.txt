@@ -1,0 +1,27 @@
+# Alternative query for #14 because its ambiguous.
+
+Query:
+```
+SELECT C.LastName, C.FirstName, GROUP_CONCAT(B.Title SEPARATOR ", ") AS Titles
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN (SELECT DISTINCT C.*
+  FROM Orders O
+  INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+  INNER JOIN Order_Details OD ON OD.OrderID = O.OrderID
+  INNER JOIN Books B ON B.BookID = OD.BookID
+  WHERE B.SubjectID IN (
+    SELECT SubjectID
+    FROM Subjects WHERE
+    CategoryName IN ("category3", "category4"))) C ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID
+```
+
+Result:
+```
+| LastName  | FirstName  | Titles                            |
+|-----------|------------|-----------------------------------|
+| lastname1 | firstname1 | book1, book4, book6, book7, book1 |
+| lastname4 | firstname4 | book3, book4, book7, book1        |
+```

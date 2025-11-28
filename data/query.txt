@@ -147,15 +147,13 @@ Result:
 
 Query:
 ```
-SELECT *
-FROM (
-  SELECT C.LastName, C.FirstName, SUM(B.UnitPrice * OD.Quantity) AS Total
-  FROM Order_Details OD
-  INNER JOIN Books B ON B.BookID = OD.BookID
-  INNER JOIN Orders O on O.OrderId = OD.OrderID
-  INNER JOIN Customers C ON C.CustomerID = O.CustomerID
-  GROUP BY C.CustomerID) Temp
-ORDER BY Temp.Total DESC
+SELECT C.LastName, C.FirstName, SUM(B.UnitPrice * OD.Quantity) AS Total
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID
+ORDER BY Total DESC
 ```
 
 Result:
@@ -216,11 +214,204 @@ Result:
 ```
 
 # 11. Show the names of all the books *lastname6 firstname6* was responsible for.
+
+Query:
+```
+SELECT B.Title
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Employees E on E.EmployeeID = O.EmployeeID
+WHERE E.LastName = "lastname6" and E.FirstName = "firstname6"
+```
+
+Result:
+```
+| Title |
+|-------|
+| book6 |
+| book7 |
+| book3 |
+| book4 |
+| book7 |
+| book1 |
+```
+
 # 12. Show the names of all the ordered books and their total quantities.  List the result in ascending quantity.
+
+Query:
+```
+SELECT B.Title, SUM(OD.Quantity) AS Total
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+GROUP BY B.BookID
+ORDER BY Total DESC
+```
+
+Result:
+```
+| Title | Total |
+|-------|-------|
+| book1 | 6     |
+| book7 | 4     |
+| book4 | 2     |
+| book6 | 2     |
+| book3 | 2     |
+| book5 | 1     |
+```
+
 # 13. Show the names of the customers who ordered at least 2 books.
+
+Query:
+```
+SELECT C.LastName, C.FirstName
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O ON O.OrderID = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID
+HAVING SUM(OD.Quantity) >= 2
+```
+
+Result:
+```
+| LastName  | FirstName  |
+|-----------|------------|
+| lastname1 | firstname1 |
+| lastname4 | firstname4 |
+```
+
 # 14. Show the name of the customers who have ordered at least a book in *category3* or *category4* and the book names.
+
+> Note:
+> The wording of the problem is ambiguous whether the books not in categories 3 and 4 should be included in the resulting list of book names.
+> This query assumes that you want to exclude them from the result.
+
+Query:
+```
+SELECT C.LastName, C.FirstName, GROUP_CONCAT(B.Title SEPARATOR ", ") AS Titles
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+WHERE B.SubjectID IN (
+  SELECT SubjectID
+  FROM Subjects WHERE
+  CategoryName IN ("category3", "category4"))
+GROUP BY C.CustomerID
+```
+
+Result:
+```
+| LastName  | FirstName  | Titles       |
+|-----------|------------|--------------|
+| lastname1 | firstname1 | book7, book6 |
+| lastname4 | firstname4 | book7        |
+```
+
 # 15. Show the name of the customer who has ordered at least one book written by *author1*.
+
+Query:
+```
+SELECT DISTINCT C.LastName, C.FirstName
+FROM Order_Details OD
+INNER JOIN Books B ON B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C ON C.CustomerID = O.CustomerID
+WHERE B.Author = "author1"
+```
+
+Result:
+```
+| LastName  | FirstName  |
+|-----------|------------|
+| lastname1 | firstname1 |
+| lastname4 | firstname4 |
+| lastname3 | firstname3 |
+```
+
 # 16. Show the name and total sale (price of orders) of each employee.
+
+Query:
+```
+SELECT E.LastName, E.FirstName, SUM(OD.Quantity * B.UnitPrice) AS TotalSale
+FROM Order_Details OD
+INNER JOIN Books B on B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Employees E on E.EmployeeID = E.EmployeeID
+GROUP BY E.EmployeeID
+```
+
+Result:
+```
+| LastName  | FirstName  | TotalSale         |
+|-----------|------------|-------------------|
+| lastname6 | firstname6 | 654.5800170898438 |
+| lastname6 | firstname9 | 654.5800170898438 |
+| lastname5 | firstname5 | 654.5800170898438 |
+```
+
 # 17. Show the book names and their respective quantities for open orders (the orders which have not been shipped) at midnight 08/04/2016.
+
+Query:
+```
+SELECT B.Title, SUM(OD.Quantity) AS Quantity
+FROM Order_Details OD
+INNER JOIN Books B on B.BookID = OD.BookID
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Employees E on E.EmployeeID = E.EmployeeID
+WHERE O.ShippedDate IS NULL OR STR_TO_DATE(O.ShippedDate, "%Y-%m-%d") > STR_TO_DATE("2016-08-04", "%Y-%m-%d")
+GROUP BY B.BookID
+```
+
+Result:
+```
+| Title | Quantity |
+|-------|----------|
+| book6 | 6        |
+| book7 | 9        |
+| book1 | 9        |
+```
+
+
+
 # 18. Show the names of customers who have ordered more than 1 book and the corresponding quantities.  List the result in the descending quantity.
+
+Query:
+```
+SELECT C.LastName, C.FirstName, SUM(OD.Quantity) AS BookCount
+FROM Order_Details OD
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C on C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID
+HAVING SUM(OD.Quantity) > 1
+ORDER BY BookCount DESC
+```
+
+Result:
+```
+| LastName  | FirstName  | BookCount |
+|-----------|------------|-----------|
+| lastname1 | firstname1 | 9         |
+| lastname4 | firstname4 | 6         |
+```
+
 # 19. Show the names of customers who have ordered more than 3 books and their respective telephone numbers.
+
+Query:
+```
+SELECT C.LastName, C.FirstName, C.Phone
+FROM Order_Details OD
+INNER JOIN Orders O on O.OrderId = OD.OrderID
+INNER JOIN Customers C on C.CustomerID = O.CustomerID
+GROUP BY C.CustomerID
+HAVING SUM(OD.Quantity) > 3
+```
+
+Result:
+```
+| LastName  | FirstName  | Phone       |
+|-----------|------------|-------------|
+| lastname1 | firstname1 | 334-001-001 |
+| lastname4 | firstname4 | 334-004-004 |
+```
