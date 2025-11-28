@@ -40,7 +40,6 @@ Result:
 | book7 | 56.9      |
 ```
 
-
 # 3. Show the unique names of all books ordered by *lastname1 firstname1*.
 
 Query:
@@ -122,7 +121,6 @@ Result:
 | lastname3 | firstname3 |
 ```
 
-
 # 7. Show the name of books supplied by *supplier2*.
 
 Query:
@@ -143,7 +141,7 @@ Result:
 | book5 |
 ```
 
-# 8. Show the total price each customer paid and their names.  List the result in descending price.
+# 8. Show the total price each customer paid and their names. List the result in descending price.
 
 Query:
 ```
@@ -239,7 +237,7 @@ Result:
 | book1 |
 ```
 
-# 12. Show the names of all the ordered books and their total quantities.  List the result in ascending quantity.
+# 12. Show the names of all the ordered books and their total quantities. List the result in ascending quantity.
 
 Query:
 ```
@@ -376,9 +374,7 @@ Result:
 | book1 | 9        |
 ```
 
-
-
-# 18. Show the names of customers who have ordered more than 1 book and the corresponding quantities.  List the result in the descending quantity.
+# 18. Show the names of customers who have ordered more than 1 book and the corresponding quantities. List the result in the descending quantity.
 
 Query:
 ```
