@@ -111,7 +111,7 @@ INNER JOIN Books B ON B.BookID = OD.BookID
 INNER JOIN Orders O on O.OrderId = OD.OrderID
 INNER JOIN Customers C ON C.CustomerID = O.CustomerID
 GROUP BY C.CustomerID
-HAVING  SUM(B.UnitPrice * OD.Quantity) < 80
+HAVING SUM(B.UnitPrice * OD.Quantity) < 80
 ```
 
 Result:
